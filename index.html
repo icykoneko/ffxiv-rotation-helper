@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Helpful web-app to practice rotations using a controller" />
+    <meta name="author" content="Carbuncle Plushy (Balmung)" />
+
+    <title>FFX|V Rotation Trainer</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.13/semantic.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.13/semantic.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/rxjs/4.1.0/rx.all.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dot/1.1.2/doT.min.js"></script>
+
+    <!-- My scripts -->
+    <script type="text/javascript" src="js/gamepad.js"></script>
+    <script type="text/javascript" src="js/action.js"></script>
+
+    <!-- Semantic UI Overrides -->
+    <style>
+      /* Large Monitor */
+      @media only screen and (min-width: 1200px) and (max-width: 1499) {
+        .ui.container {
+          width: 1127px;
+          margin-left: auto !important;
+          margin-right: auto !important;
+        }
+      }
+      /* Even larger Monitor */
+      @media only screen and (min-width: 1500px) {
+        .ui.container {
+          width: 1427px;
+          margin-left: auto !important;
+          margin-right: auto !important;
+        }
+      }
+    </style>
+
+    <style>
+      #action-sequence {
+        min-height: 40px;
+        display: inline-block;
+      }
+
+      #action-sequence:empty {
+        margin-bottom: 0.5em;
+      }
+
+      /* Action Blocks */
+
+      .action-block-container {
+        float: left;
+        margin-right: 0.5em;
+        /*background-color: #eee;
+        border: 1px solid black;*/
+        margin-top: 0.5em;
+        margin-bottom: 0.5em;
+      }
+
+      #action-sequence .action-block-container {
+        margin-top: unset;
+        margin-bottom: 0.5em;
+      }
+
+      .action-block-container:last-child {
+        margin-right: unset;
+      }
+
+      .action-block-container.placeholder,
+      .cross-hotbar.button-group .hotbar-button {
+        background-color: #aaa;
+        border-radius: 4px;
+        width: 40px;
+        height: 40px;
+      }
+
+      .action-icon {
+        width: 40px;
+        height: 40px;
+      }
+
+      #skills .action-block-container .action-icon {
+        float: left;
+        margin-right: 0.5em;
+        vertical-align: middle;
+      }
+
+      .action-block-container .content {
+        width: 14em;
+        vertical-align: middle;
+      }
+      .action-block-container .content .header {
+        font-weight: bold;
+      }
+
+      /* Cross-Hotbar Button Styles */
+      .cross-hotbar.button-group-set {
+        display: inline-block;
+      }
+
+      .cross-hotbar.button-group-set.hidden {
+        display: none;
+      }
+
+      .cross-hotbar.button-group-set.active {
+        zoom: 1.25;
+      }
+      .cross-hotbar.button-group-set:not(#chbsim-base):not(.active) {
+        padding-top: calc( ((40px + 8px + 40px) * 0.25) / 2.0 );
+        padding-bottom: calc( ((40px + 8px + 40px) * 0.25) / 2.0 );
+      }
+
+      .cross-hotbar-simulation {
+        min-height: calc( (40px + 8px + 40px) * 1.25 );
+        min-width: calc( (1rem + 40px + 4px + 40px + 4px + 40px) * 2 * 1.25 );
+      }
+
+
+      .cross-hotbar.button-group {
+        display: inline-block;
+        width: calc( 1rem + 40px + 4px + 40px + 4px + 40px );
+        height: calc( 40px + 8px + 40px );
+        position: relative;
+        vertical-align: middle;
+      }
+
+      .cross-hotbar.button-group .hotbar-button {
+        position: absolute;
+        display: inline-block;
+        margin: unset;
+      }
+      .cross-hotbar.button-group .hotbar-button.active {
+        border-color: gold;
+        border-width: 2px;
+        border-style: dotted;
+        background-color: #ddd;
+      }
+
+      .cross-hotbar.button-group .left.hotbar-button {
+        top: calc( 20px + 4px );
+        left: calc( 1rem );
+      }
+      .cross-hotbar.button-group .up.hotbar-button {
+        top: 0px;
+        left: calc( 1rem + 40px + 4px );
+      }
+      .cross-hotbar.button-group .down.hotbar-button {
+        top: calc( 40px + 8px );
+        left: calc( 1rem + 40px + 4px );
+      }
+      .cross-hotbar.button-group .right.hotbar-button {
+        top: calc( 20px + 4px );
+        left: calc( 1rem + 40px + 4px + 40px + 4px );
+      }
+
+      .cross-hotbar:not(.button-group) {
+
+      }
+
+      .hotbar-button.placeholder {
+        background-color: #ccc;
+      }
+      .hotbar-button.placeholder.ui-droppable-hover {
+        background-color: #eee;
+        border: solid 3px yellow;
+      }
+    </style>
+
+    <!-- Templates -->
+    <script type="text/html;x-dot-template" id="skill-template">
+      <div class="ui action-block-container" data-id="{{=it._id}}">
+        <img class="ui image action-icon" src="img/{{=it.icon}}.png"/>
+        <div class="content">
+          <div class="header">{{=it.name}}</div>
+          Lv.&nbsp;{{=it.level}}
+        </div>
+      </div>
+    </script>
+    <script type="text/html;x-dot-template" id="skill-set-template">
+      <div class="ui segment container">
+        <div class="ui top attached label">{{=it.label}}</div>
+        <div style="display: inline-block">
+          {{~it.actions :it:idx}}
+            {{#def.skill}}
+          {{~}}
+        </div>
+      </div>
+    </script>
+    <script type="text/html;x-dot-template" id="cross-hotbar-sim-template">
+      {{##def.cross_hotbar_group:param:
+      <div class="cross-hotbar button-group {{=param.class}}" id="chbsim-{{=param.set_id}}-{{=param.group_id}}">
+        <div class="action-block-container {{=param.class}} left hotbar-button"></div>
+        <div class="action-block-container {{=param.class}} up hotbar-button"></div>
+        <div class="action-block-container {{=param.class}} right hotbar-button"></div>
+        <div class="action-block-container {{=param.class}} down hotbar-button"></div>
+      </div>
+      #}}
+      <div class="cross-hotbar-simulation">
+        <div class="cross-hotbar button-group-set" id="chbsim-base">
+          <div class="cross-hotbar button-group-set" id="chbsim-base-L2">
+            {{#def.cross_hotbar_group:{set_id:"base", group_id:"LD", class:"dpad"} }}
+            {{#def.cross_hotbar_group:{set_id:"base", group_id:"LA", class:"analog"} }}
+          </div>
+          <div class="cross-hotbar button-group-set" id="chbsim-base-R2">
+            {{#def.cross_hotbar_group:{set_id:"base", group_id:"RD", class:"dpad"} }}
+            {{#def.cross_hotbar_group:{set_id:"base", group_id:"RA", class:"analog"} }}
+          </div>
+        </div>
+        <div class="hidden cross-hotbar button-group-set" id="chbsim-extended-L2-R2">
+          {{#def.cross_hotbar_group:{set_id:"extended", group_id:"LD", class:"dpad"} }}
+          {{#def.cross_hotbar_group:{set_id:"extended", group_id:"LA", class:"analog"} }}
+        </div>
+        <div class="hidden cross-hotbar button-group-set" id="chbsim-extended-R2-L2">
+          {{#def.cross_hotbar_group:{set_id:"extended", group_id:"RD", class:"dpad"} }}
+          {{#def.cross_hotbar_group:{set_id:"extended", group_id:"RA", class:"analog"} }}
+        </div>
+        <div class="hidden cross-hotbar button-group-set" id="chbsim-double-extended-L2-L2">
+          {{#def.cross_hotbar_group:{set_id:"extended", group_id:"LD", class:"dpad"} }}
+          {{#def.cross_hotbar_group:{set_id:"extended", group_id:"LA", class:"analog"} }}
+        </div>
+        <div class="hidden cross-hotbar button-group-set" id="chbsim-double-extended-R2-R2">
+          {{#def.cross_hotbar_group:{set_id:"extended", group_id:"RD", class:"dpad"} }}
+          {{#def.cross_hotbar_group:{set_id:"extended", group_id:"RA", class:"analog"} }}
+        </div>
+      </div>
+    </script>
+    <script type="text/html;x-dot-template" id="cross-hotbars-template">
+      {{##def.cross_hotbar_group:param:
+      <div class="cross-hotbar button-group" id="chb-{{=param.set_id}}-{{=param.group_id}}">
+        <div class="action-block-container placeholder left hotbar-button"></div>
+        <div class="action-block-container placeholder up hotbar-button"></div>
+        <div class="action-block-container placeholder right hotbar-button"></div>
+        <div class="action-block-container placeholder down hotbar-button"></div>
+      </div>
+      #}}
+      <div class="ui center aligned segment cross-hotbar">
+        <div class="ui top left attached label">Base Cross Hotbar</div>
+        <div style="display: inline-block;">
+          <div style="display: inline-block;">
+            {{#def.cross_hotbar_group:{set_id:"base", group_id:"LD"} }}
+            {{#def.cross_hotbar_group:{set_id:"base", group_id:"LA"} }}
+          </div>
+          <div style="display: inline-block;">
+            {{#def.cross_hotbar_group:{set_id:"base", group_id:"RD"} }}
+            {{#def.cross_hotbar_group:{set_id:"base", group_id:"RA"} }}
+          </div>
+        </div>
+      </div>
+      <div class="ui horizontal segments">
+        <div class="ui center aligned segment cross-hotbar">
+          <div class="ui top left attached label">Extended Cross Hotbar (L2 > R2)</div>
+          <div style="display: inline-block;">
+            {{#def.cross_hotbar_group:{set_id:"extended", group_id:"LD"} }}
+            {{#def.cross_hotbar_group:{set_id:"extended", group_id:"LA"} }}
+          </div>
+        </div>
+        <div class="ui center aligned segment cross-hotbar">
+          <div class="ui top right attached label">Extended Cross Hotbar (R2 > L2)</div>
+          <div style="display: inline-block;">
+            {{#def.cross_hotbar_group:{set_id:"extended", group_id:"RD"} }}
+            {{#def.cross_hotbar_group:{set_id:"extended", group_id:"RA"} }}
+          </div>
+        </div>
+      </div>
+      <div class="ui horizontal segments">
+        <div class="ui center aligned segment cross-hotbar">
+          <div class="ui top left attached label">Double Extended Cross Hotbar (L2 L2)</div>
+          <div style="display: inline-block;">
+            {{#def.cross_hotbar_group:{set_id:"double-extended", group_id:"LD"} }}
+            {{#def.cross_hotbar_group:{set_id:"double-extended", group_id:"LA"} }}
+          </div>
+        </div>
+        <div class="ui center aligned segment cross-hotbar">
+          <div class="ui top right attached label">Double Extended Cross Hotbar (R2 R2)</div>
+          <div style="display: inline-block;">
+            {{#def.cross_hotbar_group:{set_id:"double-extended", group_id:"RD"} }}
+            {{#def.cross_hotbar_group:{set_id:"double-extended", group_id:"RA"} }}
+          </div>
+        </div>
+      </div>
+    </script>
+
+  </head>
+  <body>
+    <div class="ui segment container">
+      <div class="ui form" id="gamepad_selection_form">
+        <div class="inline fields">
+          <label>Controller:</label>
+          <div class="field" style="width: 100%">
+            <div class="ui selection dropdown" style="width: 100%">
+              <input type="hidden" name="gamepad_id">
+              <i class="dropdown icon"></i>
+              <div class="default text">Select controller...</div>
+              <div class="menu"></div>
+            </div>
+          </div>
+          <button class="ui button" id="refreshControllers">Refresh&nbsp;Controllers</button>
+        </div>
+      </div>
+      <div class="ui center aligned basic segment" id="simulation">
+      </div>
+    </div>
+    <div class="ui segment container" style="padding-bottom: unset;">
+      <div class="ui top attached label">Sequence</div>
+      <div class="ui container" id="action-sequence"></div>
+    </div>
+    <div class="ui container" id="skills">
+    </div>
+    <div class="ui segment container">
+      <div class="ui top attached label">Hotbar Config</div>
+      <div id="hotbars"></div>
+    </div>
+  </body>
+  <script type="text/javascript">
+    $(() => {
+      var def = {
+        skill: $('#skill-template').text(),
+        skill_set: $('#skill-set-template').text(),
+        cross_hotbars: $('#cross-hotbars-template').text(),
+        cross_hotbar_sim: $('#cross-hotbar-sim-template').text()
+      };
+
+      var $form = $('#gamepad_selection_form');
+      var $gamepadDropdown = $form.form('get field', 'gamepad_id')
+        .closest('div.selection.dropdown');
+      var currentGamepads = _(navigator.getGamepads()).chain()
+        .reject((e) => e === null)
+        .map((e) => Object({name: e.id, value: e.id}))
+        .value();
+      console.log("Current Gamepads: ", currentGamepads);
+      $gamepadDropdown.dropdown({
+        onChange: (value, text, $selectedItem) => {
+          crossHotbarController.setGamepad(value);
+        },
+        values: currentGamepads,
+        placeholder: "Select controller"
+      });
+
+      $('#refreshControllers.button').on('click', () => {
+        /* Refresh the list of gamepads... */
+        $gamepadDropdown.dropdown('clear')
+          .find('.menu').children().remove().end().append(
+            _(navigator.getGamepads()).chain()
+              .reject((e) => e === null)
+              .map((e) => $('<div>').addClass('item').attr('data-value', e.id).text(e.id))
+              .value());
+      });
+
+      $(window).on('gamepadconnected', function(event) {
+        console.log('Gamepad Connected: ', event.originalEvent.gamepad.id);
+        $gamepadDropdown.find('.menu').append(
+          $('<div/>').addClass('item')
+            .data('value', event.originalEvent.gamepad.id)
+            .text(event.originalEvent.gamepad.id));
+      });
+      $(window).on('gamepaddisconnected', function(event) {
+        console.log('Gamepad Disconnected: ', event.originalEvent.gamepad.id)
+        console.log('Existing items: ', $gamepadDropdown.find('.item'))
+        var $removed = $gamepadDropdown
+          .find('.item[data-value="' + event.originalEvent.gamepad.id + '"]')
+          .remove();
+        if ($removed.hasClass('selected')) {
+          $gamepadDropdown.dropdown('clear');
+        }
+        console.log("Removed: ", $removed);
+      });
+
+      crossHotbarController.activeHotbarObserver.subscribe((bar) => {
+        console.log("Observed change in active hotbar: ", bar);
+        $crossHotbars = $('.cross-hotbar-simulation .cross-hotbar.button-group-set')
+        if (bar == null) {
+          $crossHotbars
+            .removeClass('active')
+            .not('#chbsim-base, #chbsim-base-L2, #chbsim-base-R2')
+            .addClass('hidden');
+          $crossHotbars
+            .filter('#chbsim-base, #chbsim-base-L2, #chbsim-base-R2')
+            .removeClass('hidden');
+        } else if (bar == 'L') {
+          $crossHotbars
+            .removeClass('active')
+            .not('#chbsim-base, #chbsim-base-L2, #chbsim-base-R2')
+            .addClass('hidden');
+          $crossHotbars
+            .filter('#chbsim-base, #chbsim-base-L2, #chbsim-base-R2')
+            .removeClass('hidden')
+            .filter('#chbsim-base-L2')
+            .addClass('active');
+        } else if (bar == 'R') {
+          $crossHotbars
+            .removeClass('active')
+            .not('#chbsim-base, #chbsim-base-L2, #chbsim-base-R2')
+            .addClass('hidden');
+          $crossHotbars
+            .filter('#chbsim-base, #chbsim-base-L2, #chbsim-base-R2')
+            .removeClass('hidden')
+            .filter('#chbsim-base-R2')
+            .addClass('active');
+        } else if (bar == 'XL' || bar == 'L-WXR') {
+          $crossHotbars
+            .removeClass('active')
+            .not('#chbsim-extended-L2-R2')
+            .addClass('hidden');
+          $crossHotbars
+            .filter('#chbsim-extended-L2-R2')
+            .removeClass('hidden')
+            .addClass('active');
+        } else if (bar == 'XR' || bar == 'R-WXL') {
+          $crossHotbars
+            .removeClass('active')
+            .not('#chbsim-extended-R2-L2')
+            .addClass('hidden');
+          $crossHotbars
+            .filter('#chbsim-extended-R2-L2')
+            .removeClass('hidden')
+            .addClass('active');
+        } else if (bar == 'WXL') {
+          $crossHotbars
+            .removeClass('active')
+            .not('#chbsim-double-extended-L2-L2')
+            .addClass('hidden');
+          $crossHotbars
+            .filter('#chbsim-double-extended-L2-L2')
+            .removeClass('hidden')
+            .addClass('active');
+        } else if (bar == 'WXR') {
+          $crossHotbars
+            .removeClass('active')
+            .not('#chbsim-double-extended-R2-R2')
+            .addClass('hidden');
+          $crossHotbars
+            .filter('#chbsim-double-extended-R2-R2')
+            .removeClass('hidden')
+            .addClass('active');
+        }
+      });
+
+      crossHotbarController.buttonPressedObserver.subscribe((buttons) => {
+        //console.log("Buttons Pressed: ", buttons);
+        $activeCrossHotbar = $('.cross-hotbar-simulation .cross-hotbar.button-group-set.active');
+
+        /* Deactivate everything */
+        $('.cross-hotbar-simulation .hotbar-button').removeClass('active');
+        MAPPING = {
+          'dl': '.dpad.left',
+          'du': '.dpad.up',
+          'dr': '.dpad.right',
+          'dd': '.dpad.down',
+          'al': '.analog.left',
+          'au': '.analog.up',
+          'ar': '.analog.right',
+          'ad': '.analog.down'
+        };
+        $activatedButtons = $activeCrossHotbar
+          .find(_(buttons).chain()
+            .map((b) => '.hotbar-button' + MAPPING[b])
+            .join(",").value())
+          .addClass('active');
+        console.log("Activated Buttons: ", $activatedButtons);
+      });
+
+      $('#action-sequence').sortable({
+        placeholder: 'action-block-container placeholder',
+        // over: (event, ui) => ui.helper.data('inside', true),
+        // out: (event, ui) => ui.helper.data('inside', false),
+        // beforeStop: (event, ui) => ui.helper.data('inside') && ui.item.remove()
+        receive: (event, ui) => {
+          console.log("Received: ", ui.item, " (Helper: ", ui.helper, ")");
+        },
+        stop: (event, ui) => {
+          console.log("SORTSTOP: ", ui.item, " (Helper: ", ui.helper, ")");
+          ui.item.removeAttr('style');
+        },
+      });
+
+      $('#skills').append(doT.template(def.skill_set, undefined, def)({
+        label: 'Skills', actions: ACTIONS.BLM
+      }));
+
+      $('#hotbars').append(doT.template(def.cross_hotbars, undefined, def)());
+
+      $('#simulation').append(doT.template(def.cross_hotbar_sim)());
+
+      $('#skills .action-icon').draggable({
+        connectToSortable: '#action-sequence',
+        helper: function(event) {
+          var $target = $(event.target);
+          return $('<div>').addClass('action-block-container')
+            .attr('data-id', $target.parent().attr('data-id'))
+            .append($(event.target).clone());
+        },
+        cursor: "move",
+        zIndex: 100
+      });
+      $('#skills').on('click', '.action-block-container', function(e) {
+        var $target = $(event.target).closest('.action-block-container');
+        $("#action-sequence").append(
+          $('<div>').addClass('action-block-container')
+            .attr('data-id', $target.attr('data-id'))
+            .append($target.find('.action-icon').clone()));
+      });
+      $('#action-sequence').on('click', '.action-block-container', function(e) {
+        /* Remove the action from the sequence */
+        $(e.target).closest('.action-block-container').remove();
+      });
+      $('#hotbars .button-group').on('click', '.hotbar-button', function(e) {
+        var $slot = $(e.target).closest('.hotbar-button');
+        $slot.removeAttr('data-id').empty();
+      });
+
+      $('.hotbar-button').droppable({
+        accept: '.action-icon',
+        drop: function(event, ui) {
+          var $slot = $(event.target);
+          $slot.empty();
+          $slot
+            .attr('data-id',
+                  ui.draggable.parent().attr('data-id'))
+            .append(ui.draggable.clone());
+
+          console.log("Setting ", ui.draggable, " in ", $slot);
+        }
+      });
+    });
+  </script>
+</html>
