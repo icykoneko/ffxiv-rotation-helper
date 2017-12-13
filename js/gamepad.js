@@ -125,7 +125,7 @@ class CrossHotbarController {
   activateHotbar(bar) {
     console.log("Activating hotbar: ", bar);
     this.activeHotbar = bar;
-    this.activeHotbarObserver.onNext(this.activeHotbar);
+    this.activeHotbarObserver.next(this.activeHotbar);
   }
 
   handleButtonUpdate(updatedButtons) {
@@ -234,7 +234,7 @@ class CrossHotbarController {
       this.buttonStates.au && pressedButtons.push('au');
       this.buttonStates.ar && pressedButtons.push('ar');
       this.buttonStates.ad && pressedButtons.push('ad');
-      this.buttonPressedObserver.onNext(pressedButtons);
+      this.buttonPressedObserver.next(pressedButtons);
     }
   }
 }

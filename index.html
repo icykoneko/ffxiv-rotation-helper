@@ -14,12 +14,14 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.13/semantic.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/rxjs/4.1.0/rx.all.min.js"></script>
+    <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/rxjs/4.1.0/rx.all.min.js"></script>-->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/rxjs/5.5.5/Rx.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dot/1.1.2/doT.min.js"></script>
 
     <!-- My scripts -->
     <script type="text/javascript" src="js/gamepad.js"></script>
     <script type="text/javascript" src="js/action.js"></script>
+    <script type="text/javascript" src="js/viewmodel.js"></script>
 
     <!-- Semantic UI Overrides -->
     <style>
@@ -193,93 +195,110 @@
     </script>
     <script type="text/html;x-dot-template" id="cross-hotbar-sim-template">
       {{##def.cross_hotbar_group:param:
-      <div class="cross-hotbar button-group {{=param.class}}" id="chbsim-{{=param.set_id}}-{{=param.group_id}}">
-        <div class="action-block-container {{=param.class}} left hotbar-button"></div>
-        <div class="action-block-container {{=param.class}} up hotbar-button"></div>
-        <div class="action-block-container {{=param.class}} right hotbar-button"></div>
-        <div class="action-block-container {{=param.class}} down hotbar-button"></div>
+      <div class="cross-hotbar button-group {{=param.side}}"
+           data-bar="{{=param.bar}}"
+           data-side="{{=param.side}}">
+        <div class="action-block-container {{=param.side}} left hotbar-button"
+             data-slot="left"></div>
+        <div class="action-block-container {{=param.side}} up hotbar-button"
+             data-slot="up"></div>
+        <div class="action-block-container {{=param.side}} right hotbar-button"
+             data-slot="right"></div>
+        <div class="action-block-container {{=param.side}} down hotbar-button"
+             data-slot="down"></div>
       </div>
       #}}
       <div class="cross-hotbar-simulation">
         <div class="cross-hotbar button-group-set" id="chbsim-base">
-          <div class="cross-hotbar button-group-set" id="chbsim-base-L2">
-            {{#def.cross_hotbar_group:{set_id:"base", group_id:"LD", class:"dpad"} }}
-            {{#def.cross_hotbar_group:{set_id:"base", group_id:"LA", class:"analog"} }}
+          <div class="cross-hotbar button-group-set" id="chbsim-base-L2" data-bar="L">
+            {{#def.cross_hotbar_group:{bar:"L", side:"dpad"} }}
+            {{#def.cross_hotbar_group:{bar:"L", side:"analog"} }}
           </div>
-          <div class="cross-hotbar button-group-set" id="chbsim-base-R2">
-            {{#def.cross_hotbar_group:{set_id:"base", group_id:"RD", class:"dpad"} }}
-            {{#def.cross_hotbar_group:{set_id:"base", group_id:"RA", class:"analog"} }}
+          <div class="cross-hotbar button-group-set" id="chbsim-base-R2" data-bar="R">
+            {{#def.cross_hotbar_group:{bar:"R", side:"dpad"} }}
+            {{#def.cross_hotbar_group:{bar:"R", side:"analog"} }}
           </div>
         </div>
-        <div class="hidden cross-hotbar button-group-set" id="chbsim-extended-L2-R2">
-          {{#def.cross_hotbar_group:{set_id:"extended", group_id:"LD", class:"dpad"} }}
-          {{#def.cross_hotbar_group:{set_id:"extended", group_id:"LA", class:"analog"} }}
+        <div class="hidden cross-hotbar button-group-set"
+             id="chbsim-extended-L2-R2"
+             data-bar="XL">
+          {{#def.cross_hotbar_group:{bar:"XL", side:"dpad"} }}
+          {{#def.cross_hotbar_group:{bar:"XL", side:"analog"} }}
         </div>
-        <div class="hidden cross-hotbar button-group-set" id="chbsim-extended-R2-L2">
-          {{#def.cross_hotbar_group:{set_id:"extended", group_id:"RD", class:"dpad"} }}
-          {{#def.cross_hotbar_group:{set_id:"extended", group_id:"RA", class:"analog"} }}
+        <div class="hidden cross-hotbar button-group-set"
+             id="chbsim-extended-R2-L2"
+             data-bar="XR">
+          {{#def.cross_hotbar_group:{bar:"XR", side:"dpad"} }}
+          {{#def.cross_hotbar_group:{bar:"XR", side:"analog"} }}
         </div>
-        <div class="hidden cross-hotbar button-group-set" id="chbsim-double-extended-L2-L2">
-          {{#def.cross_hotbar_group:{set_id:"extended", group_id:"LD", class:"dpad"} }}
-          {{#def.cross_hotbar_group:{set_id:"extended", group_id:"LA", class:"analog"} }}
+        <div class="hidden cross-hotbar button-group-set"
+             id="chbsim-double-extended-L2-L2"
+             data-bar="WXL">
+          {{#def.cross_hotbar_group:{bar:"WXL", side:"dpad"} }}
+          {{#def.cross_hotbar_group:{bar:"WXL", side:"analog"} }}
         </div>
-        <div class="hidden cross-hotbar button-group-set" id="chbsim-double-extended-R2-R2">
-          {{#def.cross_hotbar_group:{set_id:"extended", group_id:"RD", class:"dpad"} }}
-          {{#def.cross_hotbar_group:{set_id:"extended", group_id:"RA", class:"analog"} }}
+        <div class="hidden cross-hotbar button-group-set"
+             id="chbsim-double-extended-R2-R2"
+             data-bar="WXR">
+          {{#def.cross_hotbar_group:{bar:"WXR", side:"dpad"} }}
+          {{#def.cross_hotbar_group:{bar:"WXR", side:"analog"} }}
         </div>
       </div>
     </script>
     <script type="text/html;x-dot-template" id="cross-hotbars-template">
       {{##def.cross_hotbar_group:param:
-      <div class="cross-hotbar button-group" id="chb-{{=param.set_id}}-{{=param.group_id}}">
-        <div class="action-block-container placeholder left hotbar-button"></div>
-        <div class="action-block-container placeholder up hotbar-button"></div>
-        <div class="action-block-container placeholder right hotbar-button"></div>
-        <div class="action-block-container placeholder down hotbar-button"></div>
+      <div class="cross-hotbar button-group {{=param.side}}"
+           id="{{=param.id}}"
+           data-bar="{{=param.bar}}"
+           data-side="{{=param.side}}">
+        <div class="action-block-container placeholder {{=param.side}} left hotbar-button" data-slot="left"></div>
+        <div class="action-block-container placeholder {{=param.side}} up hotbar-button" data-slot="up"></div>
+        <div class="action-block-container placeholder {{=param.side}} right hotbar-button" data-slot="right"></div>
+        <div class="action-block-container placeholder {{=param.side}} down hotbar-button" data-slot="down"></div>
       </div>
       #}}
       <div class="ui center aligned segment cross-hotbar">
         <div class="ui top left attached label">Base Cross Hotbar</div>
         <div style="display: inline-block;">
-          <div style="display: inline-block;">
-            {{#def.cross_hotbar_group:{set_id:"base", group_id:"LD"} }}
-            {{#def.cross_hotbar_group:{set_id:"base", group_id:"LA"} }}
+          <div style="display: inline-block;" data-bar="L">
+            {{#def.cross_hotbar_group:{id:"chb-base-LD", bar:"L", side:"dpad"} }}
+            {{#def.cross_hotbar_group:{id:"chb-base-LA", bar:"L", side:"analog"} }}
           </div>
-          <div style="display: inline-block;">
-            {{#def.cross_hotbar_group:{set_id:"base", group_id:"RD"} }}
-            {{#def.cross_hotbar_group:{set_id:"base", group_id:"RA"} }}
+          <div style="display: inline-block;" data-bar="R">
+            {{#def.cross_hotbar_group:{id:"chb-base-RD", bar:"R", side:"dpad"} }}
+            {{#def.cross_hotbar_group:{id:"chb-base-RA", bar:"R", side:"analog"} }}
           </div>
         </div>
       </div>
       <div class="ui horizontal segments">
         <div class="ui center aligned segment cross-hotbar">
           <div class="ui top left attached label">Extended Cross Hotbar (L2 > R2)</div>
-          <div style="display: inline-block;">
-            {{#def.cross_hotbar_group:{set_id:"extended", group_id:"LD"} }}
-            {{#def.cross_hotbar_group:{set_id:"extended", group_id:"LA"} }}
+          <div style="display: inline-block;" data-bar="XL">
+            {{#def.cross_hotbar_group:{id:"chb-extended-LD", bar:"XL", side:"dpad"} }}
+            {{#def.cross_hotbar_group:{id:"chb-extended-LA", bar:"XL", side:"analog"} }}
           </div>
         </div>
         <div class="ui center aligned segment cross-hotbar">
           <div class="ui top right attached label">Extended Cross Hotbar (R2 > L2)</div>
-          <div style="display: inline-block;">
-            {{#def.cross_hotbar_group:{set_id:"extended", group_id:"RD"} }}
-            {{#def.cross_hotbar_group:{set_id:"extended", group_id:"RA"} }}
+          <div style="display: inline-block;" data-bar="XR">
+            {{#def.cross_hotbar_group:{id:"chb-extended-RD", bar:"XR", side:"dpad"} }}
+            {{#def.cross_hotbar_group:{id:"chb-extended-RA", bar:"XR", side:"analog"} }}
           </div>
         </div>
       </div>
       <div class="ui horizontal segments">
         <div class="ui center aligned segment cross-hotbar">
           <div class="ui top left attached label">Double Extended Cross Hotbar (L2 L2)</div>
-          <div style="display: inline-block;">
-            {{#def.cross_hotbar_group:{set_id:"double-extended", group_id:"LD"} }}
-            {{#def.cross_hotbar_group:{set_id:"double-extended", group_id:"LA"} }}
+          <div style="display: inline-block;" data-bar="WXL">
+            {{#def.cross_hotbar_group:{id:"chb-double-extended-LD", bar:"WXL", side:"dpad"} }}
+            {{#def.cross_hotbar_group:{id:"chb-double-extended-LA", bar:"WXL", side:"analog"} }}
           </div>
         </div>
         <div class="ui center aligned segment cross-hotbar">
           <div class="ui top right attached label">Double Extended Cross Hotbar (R2 R2)</div>
-          <div style="display: inline-block;">
-            {{#def.cross_hotbar_group:{set_id:"double-extended", group_id:"RD"} }}
-            {{#def.cross_hotbar_group:{set_id:"double-extended", group_id:"RA"} }}
+          <div style="display: inline-block;" data-bar="WXR">
+            {{#def.cross_hotbar_group:{id:"chb-double-extended-RD", bar:"WXR", side:"dpad"} }}
+            {{#def.cross_hotbar_group:{id:"chb-double-extended-RA", bar:"WXR", side:"analog"} }}
           </div>
         </div>
       </div>
@@ -368,6 +387,20 @@
           $gamepadDropdown.dropdown('clear');
         }
         console.log("Removed: ", $removed);
+      });
+
+      viewModel.hotbarConfigurationObserver.subscribe((e) => {
+        console.log("Hotbar configuration changed: ", e);
+        $hotbar = $('.cross-hotbar-simulation .cross-hotbar.button-group[data-bar="'+e.bar+'"][data-side="'+e.side+'"]');
+        $slot = $hotbar.find('.hotbar-button[data-slot="'+e.slot+'"]');
+        if (e.action === null) {
+          $slot.empty().removeAttr('data-id');
+        } else {
+          $slot.attr('data-id', e.action).append(
+            $('<img>').addClass('ui image action-icon')
+              .attr('src', 'img/'+viewModel.getIconForAction(e.action)+'.png')
+          );
+        }
       });
 
       crossHotbarController.activeHotbarObserver.subscribe((bar) => {
@@ -511,6 +544,11 @@
       $('#hotbars .button-group').on('click', '.hotbar-button', function(e) {
         var $slot = $(e.target).closest('.hotbar-button');
         $slot.removeAttr('data-id').empty();
+        viewModel.assignSlot(
+          $slot.parent().attr('data-bar'),
+          $slot.parent().attr('data-side'),
+          $slot.attr('data-slot'),
+          null);
       });
 
       $('.hotbar-button').droppable({
@@ -524,6 +562,11 @@
             .append(ui.draggable.clone());
 
           console.log("Setting ", ui.draggable, " in ", $slot);
+          viewModel.assignSlot(
+            $slot.parent().attr('data-bar'),
+            $slot.parent().attr('data-side'),
+            $slot.attr('data-slot'),
+            $slot.attr('data-id'));
         }
       });
     });
